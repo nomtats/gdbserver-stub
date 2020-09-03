@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A server stub that handles gdb-remote-debug-protocol",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "lint": "eslint src",
