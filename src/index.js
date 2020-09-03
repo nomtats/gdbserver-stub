@@ -13,7 +13,10 @@ const log = console.log;
 const server = createServer(socket => {
   log(`Connection accepted: ${socket.remoteAddress}:${socket.remotePort}`)
   socket.on("data", (data) => {
-    log(`Incoming data:${data}`);
+    log(`<-:${data}`);
+    const reply = "+$#00";
+    log(`->:${reply}`)
+    socket.write(reply);
   });
   socket.on("close", () => log("Connection closed"));
 });
