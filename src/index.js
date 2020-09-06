@@ -27,7 +27,18 @@ const server = createServer(socket => {
         const checksum = parseInt(m[2], 16);
         const expected = computeChecksum(packet);
         if (checksum == expected) {
-          const reply = '+$#00';
+          // Add an acknowlegement at the begining of the reply.
+          let reply = '+';
+          if (packet == "?") {
+            // Use stop reason SIGTRAP(5).
+            reply += generateReply('S05');
+          } else if (packet == "g") {
+            const registers = readRegisters();
+            const value = registers.map(toLittleEndianHex).join("");
+            reply += generateReply(value);
+          } else {
+            reply += generateReply('');
+          }
           log(`->:${reply}`);
           socket.write(reply);
         } else {
@@ -55,5 +66,36 @@ server.listen({ host: "localhost", port: port }, () => {
 function computeChecksum(packet) {
   return packet.split('')
     .map(x => x.charCodeAt(0))
-    .reduce((a, b) => (a + b) & 0xff);
+    .reduce((a, b) => (a + b) & 0xff, 0);
+}
+
+function generateReply(packet) {
+  const checksum = computeChecksum(packet).toString(16).padStart(2, "0");
+  return `\$${packet}#${checksum}`;
+}
+
+function readRegisters() {
+  let gprs = []
+  for (let i = 0; i < 32; i++) {
+    gprs.push(i);
+  }
+  let sr = 0;
+  let hi = 0;
+  let lo = 0;
+  let bad = 0xffffffff;
+  let cause = 0;
+  // Initial vector
+  let pc = 0xbfc00000;
+  let fcsr = 0;
+  let fir = 0;
+  return gprs.concat([sr, hi, lo, bad, cause, pc, fcsr, fir]);
+}
+
+function toLittleEndianHex(value) {
+  let ret = [];
+  for (let i = 0; i < 4; i++) {
+    const hex = value >> (i * 8) & 0xff;
+    ret.push(hex.toString(16).padStart(2, "0"));
+  }
+  return ret.join("");
 }
