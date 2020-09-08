@@ -7,9 +7,12 @@
   "scripts": {
     "start": "node src/index.js",
     "lint": "eslint src",
-    "test": "npm run lint",
+    "test": "jest",
     "prettier": "prettier --write src/**/*.js"
   },
   "author": "Tatsuo Nomura",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^26.4.2"
+  }
 }
