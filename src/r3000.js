@@ -6,6 +6,7 @@
  */
 
 import { GDBCommandHandler } from './gdb-command-handler.js';
+import { ok, stopped, error, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS } from './gdb-server-stub.js';
 
 const log = console.log;
 
@@ -35,11 +36,16 @@ export class R3000 extends GDBCommandHandler {
     this.handleWriteMemory(0xbfc00000, R3000._uint32ArrayToBytes([0x200803e8, 0x200907d0, 0x01095020]));
   }
 
+  handleHaltReason() {
+    // Use stop reason SIGTRAP(5).
+    return stopped(5);
+  }
+
   handleReadRegisters() {
     log("readRegisters");
     const r = this.registers;
     const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, r.fcsr, r.fir];
-    return GDBCommandHandler.ok(R3000._uint32ArrayToBytes(values));
+    return ok(R3000._uint32ArrayToBytes(values));
   }
 
   handleWriteRegisters(bytes) {
@@ -55,14 +61,14 @@ export class R3000 extends GDBCommandHandler {
     this.registers.bad = values[35];
     this.registers.cause = values[36];
     this.registers.pc = values[37];
-    return GDBCommandHandler.ok();
+    return ok();
   }
 
   handleReadMemory(address, length) {
     log("readMemory");
     const start = Math.max(address - 0xbfc00000, 0);
     const end = Math.min(start + length, this.memory.length);
-    return GDBCommandHandler.ok(this.memory.slice(start, end));
+    return ok(this.memory.slice(start, end));
   }
 
   handleWriteMemory(address, values) {
@@ -71,12 +77,12 @@ export class R3000 extends GDBCommandHandler {
     const end = start + values.length;
     if (this.memory.length < end) {
       // Bad access size for address
-      return GDBCommandHandler.error(GDBCommandHandler.ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS);
+      return error(ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS);
     }
     for (let i = start; i < end; i++) {
       this.memory[i] = values[i - start];
     }
-    return GDBCommandHandler.ok();
+    return ok();
   }
 
   handleStep(address) {
@@ -85,7 +91,7 @@ export class R3000 extends GDBCommandHandler {
       this.registers.pc = address
     }
     this.registers.pc += 4;
-    return GDBCommandHandler.ok();
+    return stopped(5);
   }
 
   handleContinue(address) {
@@ -94,7 +100,7 @@ export class R3000 extends GDBCommandHandler {
       this.registers.pc = address
     }
     this.registers.pc += 4;
-    return GDBCommandHandler.ok();
+    return stopped(5);
   }
 
   static _uint32ToBytes(value) {

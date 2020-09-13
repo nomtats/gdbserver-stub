@@ -122,13 +122,13 @@ test('write memory larger than size', () => {
 test('write step', () => {
   const r3000 = new R3000();
   r3000.registers.pc = 0x100;
-  r3000.handleStep();
+  expect(r3000.handleStep()).toBe("S05");
   expect(r3000.registers.pc).toBe(0x104);
 });
 
 test('write continue', () => {
   const r3000 = new R3000();
   r3000.registers.pc = 0x100;
-  r3000.handleContinue();
+  expect(r3000.handleContinue()).toBe("S05");
   expect(r3000.registers.pc).toBe(0x104);
 });

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict'
+ import { unsupported } from './gdb-server-stub.js';
 
 /**
  * A handler handles the incoming GDB commands via GDBServerStub.
@@ -13,58 +13,12 @@
  * One must extend this class and implement the handling functions to use it.
  */
 export class GDBCommandHandler {
-  static ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS = 0x34;
-
-  static _binaryToHex(bytes) {
-    return bytes.map(this._byteToHex).join("");
-  }
-
-  static _byteToHex(value) {
-    if (!Number.isInteger(value) || value < 0 || 0xff < value) {
-      throw `Value out of range: ${value}`;
-    }
-    return value.toString(16).padStart(2, "0");
-  }
 
   /**
-   * Generates an unsupported reply.
+   * Handles ? command that queries the reason of the half.
+   * @returns the reason of the halt. e.g. "S05" for SIG_TRAP
    */
-  static unsupported() {
-    return '';
-  }
-
-  /**
-   * Generates a valid reply.
-   * @param {number|string|object|undefined} value The content of the reply.
-   *     - Number means the 
-   */
-  static ok(value) {
-    if (value === undefined) {
-      return 'OK';
-    } else if (typeof(value) == 'string') {
-      return value;
-    } else if (Array.isArray(value)) {
-      return this._binaryToHex(value);
-    } else {
-      throw `Unkown value type:${value}`;
-    }
-  }
-
-  /**
-   * Generates a reply with a stop reason. 
-   * @param {number} reason The stop reason.
-   */
-  static stopped(reason) {
-    return `S${this._byteToHex(reason)}`;
-  }
-
-  /**
-   * Generates an Error reply with an Error No.
-   * @param {number} number The error number.
-   */
-  static error(number) {
-    return `E${this._byteToHex(number)}`;
-  }
+  handleHaltReason() { return unsupported(); }
 
   /**
    * Handles step execution. It executes one instruction and stops.
