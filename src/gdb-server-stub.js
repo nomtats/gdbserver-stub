@@ -6,8 +6,10 @@
  */
 
 import * as net from "net";
+import Debug from "debug";
 
-const log = console.log;
+const debug = Debug('gss:gdb-server-stub');
+const trace = Debug('gss:gdb-server-stub:trace');
 
 export class GDBServerStub {
   constructor(handler) {
@@ -17,22 +19,22 @@ export class GDBServerStub {
 
   start(host, port) {
     if (this.server !== undefined) {
-      log('Already started.');
+      debug('Already started.');
       return;
     }
 
     this.server = net.createServer(socket => {
-      log(`Connection accepted: ${socket.remoteAddress}:${socket.remotePort}`)
+      debug(`Connection accepted: ${socket.remoteAddress}:${socket.remotePort}`)
       socket.on("data", (data) => this.onData(socket, data));
-      socket.on("close", () => log("Connection closed"));
+      socket.on("close", () => debug("Connection closed"));
     });
     this.server.on("error", err => { throw err; });
     this.server.on("close", () => {
-      log("Echo Server, Shutdown");
+      debug("Echo Server, Shutdown");
       this.server = undefined;
     });
     this.server.listen({ host: host, port: port }, () => {
-      log(`Started a server at ${port}`)
+      debug(`Started a server at ${port}`)
     });
   }
 
@@ -42,20 +44,20 @@ export class GDBServerStub {
       let m;
       if (m = input.match(/^\+/)) {
         // ack
-        log(`<-:${m[0]}`);
+        trace(`<-:${m[0]}`);
       } else if (m = input.match(/^\$([^#]*)#([0-9a-zA-Z]{2})/)) {
-        log(`<-:${m[0]}`);
+        trace(`<-:${m[0]}`);
         const packet = m[1];
         const checksum = parseInt(m[2], 16);
         const expected = this.computeChecksum(packet);
         if (checksum == expected) {
           this.handlePacket(socket, packet);
         } else {
-          log(`Invalid checksum. Expected ${expected.toString(16)} but received ${m[2]} for packet ${packet}`);
+          trace(`Invalid checksum. Expected ${expected.toString(16)} but received ${m[2]} for packet ${packet}`);
         }
       } else {
-        log(`<-:${input}`);
-        log(`Unkown incoming message: ${input}`);
+        trace(`<-:${input}`);
+        debug(`Unkown incoming message: ${input}`);
         // Ignore the rest of the data.
         break;
       }
@@ -65,7 +67,7 @@ export class GDBServerStub {
 
   handlePacket(socket, packet) {
     // Reply with an acknowledgement first.
-    log(`->:+`);
+    trace(`->:+`);
     socket.write('+');
 
     let reply;
@@ -89,8 +91,6 @@ export class GDBServerStub {
         // The spec doesn't specify what should happen when the length parameter doesn't
         // match the incoming data. We just reply with error 1 here.
         reply = error(0);
-        console.log('error:' + error + ' ' + error(0));
-        console.log('reply:' + reply);
       } else {
         reply = this.handler.handleWriteMemory(address, bytes);
       }
@@ -113,7 +113,7 @@ export class GDBServerStub {
       reply = '';
     }
     const message = this.packageReply(reply);
-    log(`->:${message}`);
+    trace(`->:${message}`);
     socket.write(message);
   }
 

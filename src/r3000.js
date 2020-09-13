@@ -7,8 +7,9 @@
 
 import { GDBCommandHandler } from './gdb-command-handler.js';
 import { ok, stopped, error, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS } from './gdb-server-stub.js';
+import Debug from 'debug';
 
-const log = console.log;
+const trace = Debug('gss:r3000:trace');
 
 export class R3000 extends GDBCommandHandler {
   constructor() {
@@ -42,14 +43,14 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleReadRegisters() {
-    log("readRegisters");
+    trace("readRegisters");
     const r = this.registers;
     const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, r.fcsr, r.fir];
     return ok(R3000._uint32ArrayToBytes(values));
   }
 
   handleWriteRegisters(bytes) {
-    log("writeRegisters");
+    trace("writeRegisters");
     const values = R3000._bytesToInt32Array(bytes);
     // Skip the $zero register.
     for (let i = 1; i < this.registers.gprs.length; i++) {
@@ -65,14 +66,14 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleReadMemory(address, length) {
-    log("readMemory");
+    trace("readMemory");
     const start = Math.max(address - 0xbfc00000, 0);
     const end = Math.min(start + length, this.memory.length);
     return ok(this.memory.slice(start, end));
   }
 
   handleWriteMemory(address, values) {
-    log("writeMemory");
+    trace("writeMemory");
     const start = Math.max(address - 0xbfc00000, 0);
     const end = start + values.length;
     if (this.memory.length < end) {
@@ -86,7 +87,7 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleStep(address) {
-    log("step");
+    trace("step");
     if (address) {
       this.registers.pc = address
     }
@@ -95,7 +96,7 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleContinue(address) {
-    log("continue");
+    trace("continue");
     if (address) {
       this.registers.pc = address
     }
