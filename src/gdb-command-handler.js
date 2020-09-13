@@ -1,4 +1,13 @@
 /**
+ * Copyright (c) Tatsuo Nomura <tatsuo.nomura@gmail.com>
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict'
+
+/**
  * A handler handles the incoming GDB commands via GDBServerStub.
  * This class replies to all messages as "unsupported".
  * One must extend this class and implement the handling functions to use it.

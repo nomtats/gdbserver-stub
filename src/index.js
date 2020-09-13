@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict'
-
 import { R3000 } from "./r3000.js";
 import { GDBServerStub } from "./gdb-server-stub.js";
 
