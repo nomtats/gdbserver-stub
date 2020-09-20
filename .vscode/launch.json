@@ -5,6 +5,23 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch via NPM",
+      "request": "launch",
+      "runtimeArgs": [
+        "start",
+      ],
+      "env": {
+        "DEBUG": "*",
+        "DEBUG_HIDE_DATE": "true",
+      },
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "pwa-node",
+      "outputCapture": "std"
+    },
+    {
       "type": "node",
       "name": "vscode-jest-tests",
       "request": "launch",
