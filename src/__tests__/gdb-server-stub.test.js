@@ -170,3 +170,42 @@ test('c command with address', () => {
   expect(socket.write).toHaveBeenCalledWith('+');
   expect(socket.write).toHaveBeenCalledWith('$S05#b8');
 });
+
+test('qSupported command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleQSupported.mockReturnValue("multiprocess+;fork-events-;xmlRegisters=mips");
+  stub.handlePacket(socket, 'qSupported:multiprocess+;hwbreak-;fork-events+;no-resumed+;xmlRegisters=i386');
+  expect(handler.handleQSupported).toHaveBeenCalledWith([
+    {'multiprocess': true},
+    {'hwbreak': false},
+    {'fork-events': true},
+    {'no-resumed': true},
+    {'xmlRegisters': 'i386'}]);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$multiprocess+;fork-events-;xmlRegisters=mips#6b');
+});
+
+test('QStartNoAckMode command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+
+  handler.handleHaltReason.mockReturnValue("S05");
+  handler.handleStartNoAckMode.mockReturnValue('OK');
+
+  stub.handlePacket(socket, '?');
+  stub.handlePacket(socket, 'QStartNoAckMode');
+  expect(handler.handleStartNoAckMode).toHaveBeenCalled();
+  stub.handlePacket(socket, '?');
+  stub.handlePacket(socket, '?');
+  expect(socket.write.mock.calls).toEqual([
+    ['+'],        // ack to ?
+    ['$S05#b8'],
+    ['+'],        // ack to QStartNoAckMode
+    ['$OK#9a'],
+    ['$S05#b8'],  // no more acks
+    ['$S05#b8'],
+  ]);
+});

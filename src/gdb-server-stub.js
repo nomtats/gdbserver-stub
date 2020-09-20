@@ -15,6 +15,7 @@ export class GDBServerStub {
   constructor(handler) {
     this.handler = handler;
     this.server = undefined;
+    this.noAckMode = false;
   }
 
   start(host, port) {
@@ -25,6 +26,7 @@ export class GDBServerStub {
 
     this.server = net.createServer(socket => {
       debug(`Connection accepted: ${socket.remoteAddress}:${socket.remotePort}`)
+      this.noAckMode = false;
       socket.on("data", (data) => this.onData(socket, data));
       socket.on("close", () => debug("Connection closed"));
     });
@@ -66,9 +68,11 @@ export class GDBServerStub {
   }
 
   handlePacket(socket, packet) {
-    // Reply with an acknowledgement first.
-    trace(`->:+`);
-    socket.write('+');
+    if (!this.noAckMode) {
+      // Reply with an acknowledgement first.
+      trace(`->:+`);
+      socket.write('+');
+    }
 
     let reply;
     let m;
@@ -106,6 +110,31 @@ export class GDBServerStub {
         address = parseInt(m[1], 16);
       }
       reply = this.handler.handleContinue(address);
+    } else if (m = packet.match(/^qSupported:(.*)/)) {
+      let features = m[1].split(';').map(x => {
+        let key = x;
+        let value;
+        if (x.endsWith('+')) {
+          key = x.substr(0, x.length - 1);
+          value = true;
+        } else if (x.endsWith('-')) {
+          key = x.substr(0, x.length - 1);
+          value = false;
+        } else if (x.includes('=')) {
+          const v = x.split('=');
+          key = v[0];
+          value = v[1];
+        }
+        let obj = {};
+        obj[key] = value;
+        return obj;
+      });
+      reply = this.handler.handleQSupported(features);
+    } else if (m = packet.match(/^QStartNoAckMode/)) {
+      reply = this.handler.handleStartNoAckMode();
+      if (reply == ok()) {
+        this.noAckMode = true;
+      }
     } else {
       reply = unsupported();
     }

@@ -6,7 +6,7 @@
  */
 
 import { GDBCommandHandler } from './gdb-command-handler.js';
-import { ok, stopped, error, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS } from './gdb-server-stub.js';
+import { ok, stopped, error, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS, unsupported } from './gdb-server-stub.js';
 import Debug from 'debug';
 
 const trace = Debug('gss:r3000:trace');
@@ -102,6 +102,14 @@ export class R3000 extends GDBCommandHandler {
     }
     this.registers.pc += 4;
     return stopped(5);
+  }
+
+  handleQSupported(features) {
+    return ok('QStartNoAckMode+')
+  }
+
+  handleStartNoAckMode() {
+    return ok();
   }
 
   static _uint32ToBytes(value) {

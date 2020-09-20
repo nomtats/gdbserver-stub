@@ -57,4 +57,15 @@ export class GDBCommandHandler {
    * Handles write to all register values.
    */
   handleWriteRegisters(bytes) { return unsupported(); }
+
+  /**
+   * Handles querying of supported features.
+   * @param {object[]} features The features that GDB supports.
+   */
+  handleQSupported(features) { return unsupported(); }
+
+  /**
+   * Handles starting NoAckMode.
+   */
+  handleStartNoAckMode() { return unsupported(); }
 }
