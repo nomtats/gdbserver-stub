@@ -26,27 +26,19 @@ test('read registers', () => {
   regs.bad   = 0xffffffff;
   regs.cause = 0xcccccccc;
   regs.pc    = 0x20000000;
-  regs.fcsr  = 0x00000002;
-  regs.fir   = 0x00000001;
   expect(r3000.handleReadRegisters())
     .toEqual(`
         00000000 00100000 00200000 00300000 00400000 00500000 00600000 00700000
         00800000 00900000 00a00000 00b00000 00c00000 00d00000 00e00000 00f00000
         00000100 00100100 00200100 00300100 00400100 00500100 00600100 00700100
         00800100 00900100 00a00100 00b00100 00c00100 00d00100 00e00100 00f00100
-        00000010 78563412 f0debc9a ffffffff cccccccc 00000020 00000000 00000000
-        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-        00000000 00000000 00000000 00000000 00000000 00000000 02000000 01000000
+        00000010 78563412 f0debc9a ffffffff cccccccc 00000020
     `.replace(/[ \n]/g, ""));
 });
 
 test('write registers', () => {
   const r3000 = new R3000();
   const regs = r3000.registers;
-  regs.fcsr = 0;
-  regs.fir = 0;
 
   r3000.handleWriteRegisters([
     0xff, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00,
@@ -72,10 +64,6 @@ test('write registers', () => {
   expect(regs.bad).toBe(0xffffffff);
   expect(regs.cause).toBe(0xcccccccc);
   expect(regs.pc).toBe(0x20000000);
-
-  // FCSR and FIR aren't used
-  expect(regs.fcsr).toBe(0);
-  expect(regs.fir).toBe(0);
 });
 
 test('read memory', () => {

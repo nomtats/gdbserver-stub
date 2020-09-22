@@ -10,6 +10,46 @@ import { ok, stopped, error, currentThreadId, threadIds, ERROR_BAD_ACCESS_SIZE_F
 import Debug from 'debug';
 
 const trace = Debug('gss:r3000:trace');
+const REGISTER_INFO = [
+  'name:r0;alt-name:zero;bitsize:32;offset:0;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r1;alt-name:at;bitsize:32;offset:4;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r2;alt-name:v0;bitsize:32;offset:8;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r3;alt-name:v1;bitsize:32;offset:12;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r4;alt-name:a0;bitsize:32;offset:16;encoding:uint;format:hex;set:General Purpose Registers;generic:arg1;',
+  'name:r5;alt-name:a1;bitsize:32;offset:20;encoding:uint;format:hex;set:General Purpose Registers;generic:arg2;',
+  'name:r6;alt-name:a2;bitsize:32;offset:24;encoding:uint;format:hex;set:General Purpose Registers;generic:arg3;',
+  'name:r7;alt-name:a3;bitsize:32;offset:28;encoding:uint;format:hex;set:General Purpose Registers;generic:arg4;',
+  'name:r8;alt-name:t0;bitsize:32;offset:32;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r9;alt-name:t1;bitsize:32;offset:36;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r10;alt-name:t2;bitsize:32;offset:40;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r11;alt-name:t3;bitsize:32;offset:44;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r12;alt-name:t4;bitsize:32;offset:48;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r13;alt-name:t5;bitsize:32;offset:52;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r14;alt-name:t6;bitsize:32;offset:56;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r15;alt-name:t7;bitsize:32;offset:60;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r16;alt-name:s0;bitsize:32;offset:64;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r17;alt-name:s1;bitsize:32;offset:68;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r18;alt-name:s2;bitsize:32;offset:72;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r19;alt-name:s3;bitsize:32;offset:76;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r20;alt-name:s4;bitsize:32;offset:80;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r21;alt-name:s5;bitsize:32;offset:84;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r22;alt-name:s6;bitsize:32;offset:88;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r23;alt-name:s7;bitsize:32;offset:92;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r24;alt-name:t8;bitsize:32;offset:96;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r25;alt-name:t9;bitsize:32;offset:100;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r26;alt-name:k0;bitsize:32;offset:104;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r27;alt-name:k1;bitsize:32;offset:108;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r28;alt-name:gp;bitsize:32;offset:112;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:r29;alt-name:sp;bitsize:32;offset:116;encoding:uint;format:hex;set:General Purpose Registers;generic:sp;',
+  'name:r30;alt-name:fp;bitsize:32;offset:120;encoding:uint;format:hex;set:General Purpose Registers;generic:fp;',
+  'name:r31;alt-name:ra;bitsize:32;offset:124;encoding:uint;format:hex;set:General Purpose Registers;generic:ra;',
+  'name:sr;bitsize:32;offset:128;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:lo;bitsize:32;offset:132;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:hi;bitsize:32;offset:136;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:bad;bitsize:32;offset:140;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:cause;bitsize:32;offset:144;encoding:uint;format:hex;set:General Purpose Registers;',
+  'name:pc;bitsize:32;offset:148;encoding:uint;format:hex;set:General Purpose Registers;generic:pc;',
+];
 
 export class R3000 extends GDBCommandHandler {
   constructor() {
@@ -23,8 +63,6 @@ export class R3000 extends GDBCommandHandler {
       cause: 0,
       // 0xbfc00000 is MIPS's reset vector
       pc: 0xbfc00000,
-      fcsr: 0xffffffff,
-      fir: 0xfffffffe,
     }
 
     this.memory = new Array(1024).fill(0);
@@ -77,8 +115,16 @@ export class R3000 extends GDBCommandHandler {
     trace("readRegisters");
     const r = this.registers;
     const empty = new Array(32).fill(0);
-    const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, ...empty, r.fcsr, r.fir];
+    const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc];
     return ok(R3000._uint32ArrayToBytes(values));
+  }
+
+  handleReadRegister(index) {
+    trace(`readRegister${index}`);
+    const r = this.registers;
+    const empty = new Array(32).fill(0);
+    const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc];
+    return ok(R3000._uint32ToBytes(values[index]));
   }
 
   handleWriteRegisters(bytes) {
@@ -131,7 +177,7 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleQSupported(features) {
-    return ok('vContSupported+;QStartNoAckMode+')
+    return ok('QStartNoAckMode+')
   }
 
   handleStartNoAckMode() {
@@ -144,6 +190,20 @@ export class R3000 extends GDBCommandHandler {
 
   handleCurrentThread() {
     return currentThreadId(0x11);
+  }
+
+  handleRegisterInfo(index) {
+    trace(`registerInfo:${index}`);
+    if (index < REGISTER_INFO.length) {
+      return ok(REGISTER_INFO[index]);
+    }
+    return error(1);
+  }
+
+  handleHostInfo() {
+    trace('hostInfo');
+    // triple:mipsel-unknown-linux-gnu
+    return ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4');
   }
   
   handleSelectExecutionThread(threadId) {

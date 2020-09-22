@@ -53,12 +53,18 @@ export class GDBCommandHandler extends EventEmitter {
    * Handles read of all register values.
    * @param {number|undefined} threadId The target thread's ID.
    */
-  handleReadRegisters(threadId) { return unsupported(); }
+  handleReadRegisters() { return unsupported(); }
 
   /**
    * Handles write to all register values.
    */
   handleWriteRegisters(bytes) { return unsupported(); }
+
+  /**
+   * Handles read the value of the register at the index.
+   * @param {number|undefined} index The index of the target register.
+   */
+  handleReadRegister(index) { return unsupported(); }
 
   /**
    * Handles querying of supported features.
@@ -80,6 +86,18 @@ export class GDBCommandHandler extends EventEmitter {
    * Handles querying of the current Thread ID.
    */
   handleCurrentThread() { return unsupported(); }
+
+  /**
+   * Handles querying of information of the register at the index.
+   * @param {number} index The register's index
+   */
+  handleRegisterInfo(index) { return unsupported(); }
+
+  /**
+   * Handles querying of the GDB host information.
+   * e.g.: 'triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4'
+   */
+  handleHostInfo() { return unsupported(); }
 
   /**
    * Selects the thread for step and continue execution.

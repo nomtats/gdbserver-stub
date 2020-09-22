@@ -29,7 +29,10 @@ export class GDBServerStub {
       this.noAckMode = false;
 
       socket.on("data", (data) => this.onData(socket, data));
-      socket.on("close", () => debug("Connection closed"));
+      socket.on("close", () => {
+        debug("Connection closed");
+        this.handler.removeAllListeners();
+      });
       this.handler.on("stopped", reply => {
         const message = this.packageReply(reply);
         trace(`->:${message}`);
@@ -176,7 +179,13 @@ export class GDBServerStub {
         reply = this.handler.handleAddBreakpoint(type, addr, kind);
       }
     } else if (m = packet.match(/^qHostInfo/)) {
-      reply = ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4');
+      reply = this.handler.handleHostInfo();
+    } else if (m = packet.match(/^qRegisterInfo([0-9a-zA-Z]+)/)) {
+      const registerIndex = parseInt(m[1], 16);
+      reply = this.handler.handleRegisterInfo(registerIndex);
+    } else if (m = packet.match(/^p([0-9a-zA-Z]+)/)) {
+      const registerIndex = parseInt(m[1], 16);
+      reply = this.handler.handleReadRegister(registerIndex);
     } else {
       reply = unsupported();
     }
