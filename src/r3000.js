@@ -23,8 +23,8 @@ export class R3000 extends GDBCommandHandler {
       cause: 0,
       // 0xbfc00000 is MIPS's reset vector
       pc: 0xbfc00000,
-      fcsr: 0,
-      fir: 0,
+      fcsr: 0xffffffff,
+      fir: 0xfffffffe,
     }
 
     this.memory = new Array(1024).fill(0);
@@ -45,7 +45,8 @@ export class R3000 extends GDBCommandHandler {
   handleReadRegisters(threadId) {
     trace("readRegisters");
     const r = this.registers;
-    const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, r.fcsr, r.fir];
+    const empty = new Array(32).fill(0);
+    const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, ...empty, r.fcsr, r.fir];
     return ok(R3000._uint32ArrayToBytes(values));
   }
 
