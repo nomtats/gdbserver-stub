@@ -209,3 +209,57 @@ test('QStartNoAckMode command', () => {
     ['$S05#b8'],
   ]);
 });
+
+test('qfThreadInfo command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleThreadInfo.mockReturnValue("m1,2,3");
+  stub.handlePacket(socket, 'qfThreadInfo');
+  expect(handler.handleThreadInfo).toHaveBeenCalled();
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$m1,2,3#5b');
+});
+
+test('qsThreadInfo command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  stub.handlePacket(socket, 'qsThreadInfo');
+  expect(handler.handleThreadInfo).toHaveBeenCalledTimes(0);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$l#6c');
+});
+
+test('qC command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleCurrentThread.mockReturnValue("QC1");
+  stub.handlePacket(socket, 'qC');
+  expect(handler.handleCurrentThread).toHaveBeenCalled();
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$QC1#c5');
+});
+
+test('Hc command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleContinue.mockReturnValue("S05");
+  stub.handlePacket(socket, 'Hc-1');
+  expect(handler.handleContinue).toHaveBeenCalledWith(-1);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+});
+
+test('Hg command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleReadRegisters.mockReturnValue("1234");
+  stub.handlePacket(socket, 'Hg123');
+  expect(handler.handleReadRegisters).toHaveBeenCalledWith(0x123);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$1234#ca');
+});

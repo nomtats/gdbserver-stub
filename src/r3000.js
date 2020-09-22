@@ -6,7 +6,7 @@
  */
 
 import { GDBCommandHandler } from './gdb-command-handler.js';
-import { ok, stopped, error, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS, unsupported } from './gdb-server-stub.js';
+import { ok, stopped, error, currentThreadId, threadIds, ERROR_BAD_ACCESS_SIZE_FOR_ADDRESS, unsupported } from './gdb-server-stub.js';
 import Debug from 'debug';
 
 const trace = Debug('gss:r3000:trace');
@@ -42,7 +42,7 @@ export class R3000 extends GDBCommandHandler {
     return stopped(5);
   }
 
-  handleReadRegisters() {
+  handleReadRegisters(threadId) {
     trace("readRegisters");
     const r = this.registers;
     const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc, r.fcsr, r.fir];
@@ -95,7 +95,7 @@ export class R3000 extends GDBCommandHandler {
     return stopped(5);
   }
 
-  handleContinue(address) {
+  handleContinue(address, threadId) {
     trace("continue");
     if (address) {
       this.registers.pc = address
@@ -105,11 +105,19 @@ export class R3000 extends GDBCommandHandler {
   }
 
   handleQSupported(features) {
-    return ok('QStartNoAckMode+')
+    return ok('vContSupported+;QStartNoAckMode+')
   }
 
   handleStartNoAckMode() {
     return ok();
+  }
+
+  handleThreadInfo() {
+    return threadIds([0x11]);
+  }
+
+  handleCurrentThread() {
+    return currentThreadId(0x11);
   }
 
   static _uint32ToBytes(value) {

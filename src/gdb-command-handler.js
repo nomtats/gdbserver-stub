@@ -31,8 +31,9 @@ export class GDBCommandHandler {
    * Handles continue execution. It executes until the next break point.
    * @param {number|undefined} address The address at which the handler executes.
    *    If undefined, the current address should be used.
+   * @param {number|undefined} threadId The target thread's ID.
    */
-  handleContinue(address) { return unsupported(); }
+  handleContinue(address, threadId) { return unsupported(); }
 
   /**
    * Handles read of the memory content.
@@ -50,8 +51,9 @@ export class GDBCommandHandler {
 
   /**
    * Handles read of all register values.
+   * @param {number|undefined} threadId The target thread's ID.
    */
-  handleReadRegisters() { return unsupported(); }
+  handleReadRegisters(threadId) { return unsupported(); }
 
   /**
    * Handles write to all register values.
@@ -68,4 +70,14 @@ export class GDBCommandHandler {
    * Handles starting NoAckMode.
    */
   handleStartNoAckMode() { return unsupported(); }
+
+  /**
+   * Handles querying of thread info. Returns a list of Thread IDs.
+   */
+  handleThreadInfo() { return unsupported(); }
+
+  /**
+   * Handles querying of the current Thread ID.
+   */
+  handleCurrentThread() { return unsupported(); }
 }

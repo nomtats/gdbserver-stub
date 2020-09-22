@@ -135,6 +135,20 @@ export class GDBServerStub {
       if (reply == ok()) {
         this.noAckMode = true;
       }
+    } else if (m = packet.match(/^qfThreadInfo/)) {
+      reply = this.handler.handleThreadInfo();
+    } else if (m = packet.match(/^qsThreadInfo/)) {
+      // l indicates the end of the list.
+      reply = ok('l');
+    } else if (m = packet.match(/^qC/)) {
+      reply = this.handler.handleCurrentThread();
+    } else if (m = packet.match(/^H([cg])(-?[0-9]+)/)) {
+      const threadId = parseInt(m[2], 16);
+      if (m[1] == 'c') {
+        reply = this.handler.handleContinue(threadId);
+      } else if (m[1] == 'g') {
+        reply = this.handler.handleReadRegisters(threadId);
+      }
     } else {
       reply = unsupported();
     }
@@ -175,6 +189,14 @@ export function ok(value) {
   } else {
     throw `Unkown value type:${value}`;
   }
+}
+
+export function threadIds(ids) {
+  return 'm' + ids.map(x => x.toString(16)).join(',');
+}
+
+export function currentThreadId(id) {
+  return 'QC' + id.toString(16);
 }
 
  /**
