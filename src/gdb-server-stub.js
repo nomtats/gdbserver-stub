@@ -29,10 +29,15 @@ export class GDBServerStub {
       this.noAckMode = false;
       socket.on("data", (data) => this.onData(socket, data));
       socket.on("close", () => debug("Connection closed"));
+      this.handler.on("stopped", reply => {
+        const message = this.packageReply(reply);
+        trace(`->:${message}`);
+        socket.write(message);
+      })
     });
     this.server.on("error", err => { throw err; });
     this.server.on("close", () => {
-      debug("Echo Server, Shutdown");
+      debug("Server shutdown");
       this.server = undefined;
     });
     this.server.listen({ host: host, port: port }, () => {
@@ -47,6 +52,8 @@ export class GDBServerStub {
       if (m = input.match(/^\+/)) {
         // ack
         trace(`<-:${m[0]}`);
+      } else if (m = input.match(/^[\x03]/)) {
+        this.handler.handleInterruption();
       } else if (m = input.match(/^\$([^#]*)#([0-9a-zA-Z]{2})/)) {
         trace(`<-:${m[0]}`);
         const packet = m[1];
@@ -145,19 +152,20 @@ export class GDBServerStub {
     } else if (m = packet.match(/^H([cg])(-?[0-9]+)/)) {
       const threadId = parseInt(m[2], 16);
       if (m[1] == 'c') {
-        reply = this.handler.handleContinue(threadId);
+        reply = this.handler.handleContinue(undefined /* address */, threadId);
       } else if (m[1] == 'g') {
         reply = this.handler.handleReadRegisters(threadId);
       }
+    } else if (m = packet.match(/^qHostInfo/)) {
+      reply = ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4');
     } else {
       reply = unsupported();
     }
-    if (reply === undefined) {
-      reply = '';
+    if (reply !== undefined) {
+      const message = this.packageReply(reply);
+      trace(`->:${message}`);
+      socket.write(message);
     }
-    const message = this.packageReply(reply);
-    trace(`->:${message}`);
-    socket.write(message);
   }
 
   computeChecksum(packet) {

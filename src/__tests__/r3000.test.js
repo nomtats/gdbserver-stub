@@ -26,7 +26,7 @@ test('read registers', () => {
   regs.bad   = 0xffffffff;
   regs.cause = 0xcccccccc;
   regs.pc    = 0x20000000;
-  regs.fcsr  = 0x00000000;
+  regs.fcsr  = 0x00000002;
   regs.fir   = 0x00000001;
   expect(r3000.handleReadRegisters())
     .toEqual(`
@@ -34,13 +34,19 @@ test('read registers', () => {
         00800000 00900000 00a00000 00b00000 00c00000 00d00000 00e00000 00f00000
         00000100 00100100 00200100 00300100 00400100 00500100 00600100 00700100
         00800100 00900100 00a00100 00b00100 00c00100 00d00100 00e00100 00f00100
-        00000010 78563412 f0debc9a ffffffff cccccccc 00000020 00000000 01000000
+        00000010 78563412 f0debc9a ffffffff cccccccc 00000020 00000000 00000000
+        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000000 00000000 00000000 02000000 01000000
     `.replace(/[ \n]/g, ""));
 });
 
 test('write registers', () => {
   const r3000 = new R3000();
   const regs = r3000.registers;
+  regs.fcsr = 0;
+  regs.fir = 0;
 
   r3000.handleWriteRegisters([
     0xff, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00,
@@ -122,13 +128,15 @@ test('write memory larger than size', () => {
 test('write step', () => {
   const r3000 = new R3000();
   r3000.registers.pc = 0x100;
-  expect(r3000.handleStep()).toBe("S05");
+  expect(r3000.handleStep()).toBe("OK");
+  r3000.run(100);
   expect(r3000.registers.pc).toBe(0x104);
 });
 
 test('write continue', () => {
   const r3000 = new R3000();
   r3000.registers.pc = 0x100;
-  expect(r3000.handleContinue()).toBe("S05");
-  expect(r3000.registers.pc).toBe(0x104);
+  expect(r3000.handleContinue()).toBe("OK");
+  r3000.run(0x100);
+  expect(r3000.registers.pc).toBe(0x100 + 0x100 * 4);
 });

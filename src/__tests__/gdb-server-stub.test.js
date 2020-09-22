@@ -133,42 +133,42 @@ test('s command', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleStep.mockReturnValue("S05");
+  handler.handleStep.mockReturnValue("OK");
   stub.handlePacket(socket, 's');
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
 });
 
 test('s command with address', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleStep.mockReturnValue("S05");
+  handler.handleStep.mockReturnValue("OK");
   stub.handlePacket(socket, 'sabcd1234');
   expect(handler.handleStep).toHaveBeenCalledWith(0xabcd1234);
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
 });
 
 test('c command', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleContinue.mockReturnValue("S05");
+  handler.handleContinue.mockReturnValue("OK");
   stub.handlePacket(socket, 'c');
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
 });
 
 test('c command with address', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleContinue.mockReturnValue("S05");
+  handler.handleContinue.mockReturnValue("OK");
   stub.handlePacket(socket, 'cabcd1234');
   expect(handler.handleContinue).toHaveBeenCalledWith(0xabcd1234);
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
 });
 
 test('qSupported command', () => {
@@ -248,7 +248,7 @@ test('Hc command', () => {
   const socket = new Socket();
   handler.handleContinue.mockReturnValue("S05");
   stub.handlePacket(socket, 'Hc-1');
-  expect(handler.handleContinue).toHaveBeenCalledWith(-1);
+  expect(handler.handleContinue).toHaveBeenCalledWith(undefined, -1);
   expect(socket.write).toHaveBeenCalledWith('+');
   expect(socket.write).toHaveBeenCalledWith('$S05#b8');
 });

@@ -35,9 +35,34 @@ export class R3000 extends GDBCommandHandler {
     //   li t1
     //   add t2, t0, t1
     this.handleWriteMemory(0xbfc00000, R3000._uint32ArrayToBytes([0x200803e8, 0x200907d0, 0x01095020]));
+
+    this.stopAfterCycles = 0;
+  }
+
+  run(cycles) {
+    if (this.stopAfterCycles == 0) {
+      return;
+    }
+
+    let cyclesToRun = Math.min(cycles, this.stopAfterCycles);
+    while (cyclesToRun-- > 0) {
+      this.stopAfterCycles--;
+      this.registers.pc += 4;
+    }
+
+    if (this.stopAfterCycles == 0) {
+      this.emit('stopped', stopped(5));
+    }
+  }
+
+  handleInterruption() {
+    trace('interrupted')
+    this.stopAfterCycles = 0;
+    this.emit('stopped', stopped(5));
   }
 
   handleHaltReason() {
+    trace('haltReason')
     // Use stop reason SIGTRAP(5).
     return stopped(5);
   }
@@ -87,26 +112,20 @@ export class R3000 extends GDBCommandHandler {
     return ok();
   }
 
-  handleStep(address) {
+  handleStep(address, threadId) {
     trace("step");
-    if (address) {
-      this.registers.pc = address
-    }
-    this.registers.pc += 4;
-    return stopped(5);
+    this.stopAfterCycles = 1;
+    return ok();
   }
 
   handleContinue(address, threadId) {
     trace("continue");
-    if (address) {
-      this.registers.pc = address
-    }
-    this.registers.pc += 4;
-    return stopped(5);
+    this.stopAfterCycles = Infinity;
+    return ok();
   }
 
   handleQSupported(features) {
-    return ok('vContSupported+;QStartNoAckMode+')
+    return ok('QStartNoAckMode+')
   }
 
   handleStartNoAckMode() {

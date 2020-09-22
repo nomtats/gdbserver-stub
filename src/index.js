@@ -12,6 +12,10 @@ function runServer() {
   const r3000 = new R3000();
   const server = new GDBServerStub(r3000);
   server.start("localhost", 2424);
+  function runCpu() {
+    r3000.run(100);
+  }
+  setInterval(runCpu, 100);
 }
 
 if (process.env.NODE_ENV != 'test') {

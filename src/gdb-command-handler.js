@@ -6,13 +6,14 @@
  */
 
  import { unsupported } from './gdb-server-stub.js';
+ import { EventEmitter } from 'events';
 
 /**
  * A handler handles the incoming GDB commands via GDBServerStub.
  * This class replies to all messages as "unsupported".
  * One must extend this class and implement the handling functions to use it.
  */
-export class GDBCommandHandler {
+export class GDBCommandHandler extends EventEmitter {
 
   /**
    * Handles ? command that queries the reason of the half.
