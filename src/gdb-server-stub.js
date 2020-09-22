@@ -27,6 +27,7 @@ export class GDBServerStub {
     this.server = net.createServer(socket => {
       debug(`Connection accepted: ${socket.remoteAddress}:${socket.remotePort}`)
       this.noAckMode = false;
+
       socket.on("data", (data) => this.onData(socket, data));
       socket.on("close", () => debug("Connection closed"));
       this.handler.on("stopped", reply => {
@@ -149,12 +150,30 @@ export class GDBServerStub {
       reply = ok('l');
     } else if (m = packet.match(/^qC/)) {
       reply = this.handler.handleCurrentThread();
-    } else if (m = packet.match(/^H([cg])(-?[0-9]+)/)) {
+    } else if (m = packet.match(/^H([cgm])(-?[0-9]+)/)) {
       const threadId = parseInt(m[2], 16);
-      if (m[1] == 'c') {
-        reply = this.handler.handleContinue(undefined /* address */, threadId);
-      } else if (m[1] == 'g') {
-        reply = this.handler.handleReadRegisters(threadId);
+      switch (m[1]) {
+        case 'c':
+          reply = this.handler.handleSelectExecutionThread(threadId);
+          break;
+        case 'm':
+          reply = this.handler.handleSelectMemoryThread(threadId);
+          break;
+        case 'g':
+          reply = this.handler.handleSelectRegisterThread(threadId);
+          break;
+        default:
+          reply = unsupported();
+          break;
+      }
+    } else if (m = packet.match(/^([zZ])([0-4]),([0-9a-zA-Z]+),([0-9a-zA-Z]+)/)) {
+      const type = parseInt(m[2]);
+      const addr = parseInt(m[3], 16);
+      const kind = parseInt(m[4], 16);
+      if (m[1] == 'z') {
+        reply = this.handler.handleRemoveBreakpoint(type, addr, kind);
+      } else if (m[1] == 'Z') {
+        reply = this.handler.handleAddBreakpoint(type, addr, kind);
       }
     } else if (m = packet.match(/^qHostInfo/)) {
       reply = ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4');

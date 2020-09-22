@@ -246,20 +246,61 @@ test('Hc command', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleContinue.mockReturnValue("S05");
+  handler.handleSelectExecutionThread.mockReturnValue("OK");
   stub.handlePacket(socket, 'Hc-1');
-  expect(handler.handleContinue).toHaveBeenCalledWith(undefined, -1);
+  expect(handler.handleSelectExecutionThread).toHaveBeenCalledWith(-1);
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$S05#b8');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
 });
 
 test('Hg command', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);
   const socket = new Socket();
-  handler.handleReadRegisters.mockReturnValue("1234");
+  handler.handleSelectRegisterThread.mockReturnValue("OK");
   stub.handlePacket(socket, 'Hg123');
-  expect(handler.handleReadRegisters).toHaveBeenCalledWith(0x123);
+  expect(handler.handleSelectRegisterThread).toHaveBeenCalledWith(0x123);
   expect(socket.write).toHaveBeenCalledWith('+');
-  expect(socket.write).toHaveBeenCalledWith('$1234#ca');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
+});
+
+test('Hm command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleSelectMemoryThread.mockReturnValue("OK");
+  stub.handlePacket(socket, 'Hm123');
+  expect(handler.handleSelectMemoryThread).toHaveBeenCalledWith(0x123);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
+});
+
+test('Z command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleAddBreakpoint.mockReturnValue("OK");
+  stub.handlePacket(socket, 'Z1,1234,4');
+  expect(handler.handleAddBreakpoint).toHaveBeenCalledWith(1, 0x1234, 4);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
+});
+
+test('z command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleRemoveBreakpoint.mockReturnValue("OK");
+  stub.handlePacket(socket, 'z1,1234,4');
+  expect(handler.handleRemoveBreakpoint).toHaveBeenCalledWith(1, 0x1234, 4);
+  expect(socket.write).toHaveBeenCalledWith('+');
+  expect(socket.write).toHaveBeenCalledWith('$OK#9a');
+});
+
+test('z command with invalid type', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  stub.handlePacket(socket, 'z5,1234,4');
+  expect(handler.handleRemoveBreakpoint).toHaveBeenCalledTimes(0);
 });

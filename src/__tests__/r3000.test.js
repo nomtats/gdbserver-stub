@@ -140,3 +140,24 @@ test('write continue', () => {
   r3000.run(0x100);
   expect(r3000.registers.pc).toBe(0x100 + 0x100 * 4);
 });
+
+test('add/remove breakpoint', () => {
+  const r3000 = new R3000();
+  r3000.registers.pc = 0x100;
+  expect(r3000.handleAddBreakpoint(1, 0x110, 4)).toBe("OK");
+  r3000.handleContinue();
+  r3000.run(0x100);
+  expect(r3000.registers.pc).toBe(0x110);
+  
+  r3000.handleContinue();
+  r3000.run(0x10);
+  expect(r3000.registers.pc).toBe(0x110 + 0x40);
+  
+  r3000.registers.pc = 0x100;
+  expect(r3000.handleRemoveBreakpoint(1, 0x110, 4)).toBe("OK");
+  r3000.handleContinue();
+  r3000.run(0x100);
+  expect(r3000.registers.pc).toBe(0x100 + 0x100 * 4);
+
+  expect(r3000.handleRemoveBreakpoint(1, 0x110, 4)).toBe("E01");
+});

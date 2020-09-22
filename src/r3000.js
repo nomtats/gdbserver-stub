@@ -37,6 +37,8 @@ export class R3000 extends GDBCommandHandler {
     this.handleWriteMemory(0xbfc00000, R3000._uint32ArrayToBytes([0x200803e8, 0x200907d0, 0x01095020]));
 
     this.stopAfterCycles = 0;
+
+    this.breakpoints = {};
   }
 
   run(cycles) {
@@ -48,6 +50,10 @@ export class R3000 extends GDBCommandHandler {
     while (cyclesToRun-- > 0) {
       this.stopAfterCycles--;
       this.registers.pc += 4;
+      if (this.registers.pc in this.breakpoints) {
+        this.stopAfterCycles = 0;
+        break;
+      }
     }
 
     if (this.stopAfterCycles == 0) {
@@ -67,7 +73,7 @@ export class R3000 extends GDBCommandHandler {
     return stopped(5);
   }
 
-  handleReadRegisters(threadId) {
+  handleReadRegisters() {
     trace("readRegisters");
     const r = this.registers;
     const empty = new Array(32).fill(0);
@@ -112,20 +118,20 @@ export class R3000 extends GDBCommandHandler {
     return ok();
   }
 
-  handleStep(address, threadId) {
+  handleStep(address) {
     trace("step");
     this.stopAfterCycles = 1;
     return ok();
   }
 
-  handleContinue(address, threadId) {
+  handleContinue(address) {
     trace("continue");
     this.stopAfterCycles = Infinity;
     return ok();
   }
 
   handleQSupported(features) {
-    return ok('QStartNoAckMode+')
+    return ok('vContSupported+;QStartNoAckMode+')
   }
 
   handleStartNoAckMode() {
@@ -138,6 +144,37 @@ export class R3000 extends GDBCommandHandler {
 
   handleCurrentThread() {
     return currentThreadId(0x11);
+  }
+  
+  handleSelectExecutionThread(threadId) {
+    trace(`select execution thread:${threadId}`);
+    return ok();
+  }
+  
+  handleSelectRegisterThread(threadId) {
+    trace(`select register thread:${threadId}`);
+    return ok();
+  }
+  
+  handleSelectMemoryThread(threadId) {
+    trace(`select memory thread:${threadId}`);
+    return ok();
+  }
+
+  handleAddBreakpoint(type, address, kind) {
+    trace(`addBreakpoint at:${address.toString(16)}`)
+    this.breakpoints[address] = true;
+    return ok();
+  }
+
+  handleRemoveBreakpoint(type, address, kind) {
+    trace(`removeBreakpoint at:${address.toString(16)}`)
+    if (address in this.breakpoints) {
+      delete this.breakpoints[address];
+      return ok();
+    } else {
+      return error(1);
+    }
   }
 
   static _uint32ToBytes(value) {

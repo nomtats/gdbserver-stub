@@ -32,9 +32,8 @@ export class GDBCommandHandler extends EventEmitter {
    * Handles continue execution. It executes until the next break point.
    * @param {number|undefined} address The address at which the handler executes.
    *    If undefined, the current address should be used.
-   * @param {number|undefined} threadId The target thread's ID.
    */
-  handleContinue(address, threadId) { return unsupported(); }
+  handleContinue(address) { return unsupported(); }
 
   /**
    * Handles read of the memory content.
@@ -81,4 +80,48 @@ export class GDBCommandHandler extends EventEmitter {
    * Handles querying of the current Thread ID.
    */
   handleCurrentThread() { return unsupported(); }
+
+  /**
+   * Selects the thread for step and continue execution.
+   * @param {number} threadId The selected Thread ID
+   */
+  handleSelectExecutionThread(threadId) { return unsupported(); }
+
+  /**
+   * Selects the thread for read/write registers.
+   * @param {number} threadId The selected Thread ID
+   */
+  handleSelectRegisterThread(threadId) { return unsupported(); }
+
+  /**
+   * Selects the thread for read/write memory.
+   * @param {number} threadId The selected Thread ID
+   */
+  handleSelectMemoryThread(threadId) { return unsupported(); }
+
+  /**
+   * Handles addding a breakpoint.
+   * @param {number} type The type of the breakpoint.
+   *                      0: software
+   *                      1: hardware
+   *                      2: write watchpoint
+   *                      3: read watchpoint
+   *                      4: access watchpoint
+   * @param {number} address The address of the breakpoint
+   * @param {number} kind Target specific. Usually the breakpoint size in bytes
+   */
+  handleAddBreakpoint(type, address, kind) { return unsupported(); }
+
+  /**
+   * Handles removing a breakpoint.
+   * @param {number} type The type of the breakpoint.
+   *                      0: software
+   *                      1: hardware
+   *                      2: write watchpoint
+   *                      3: read watchpoint
+   *                      4: access watchpoint
+   * @param {number} address The address of the breakpoint
+   * @param {number} kind Target specific. Usually the breakpoint size in bytes
+   */
+  handleRemoveBreakpoint(type, address, kind) { return unsupported(); }
 }
