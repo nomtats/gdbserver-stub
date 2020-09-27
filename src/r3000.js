@@ -114,7 +114,6 @@ export class R3000 extends GDBCommandHandler {
   handleReadRegisters() {
     trace("readRegisters");
     const r = this.registers;
-    const empty = new Array(32).fill(0);
     const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc];
     return ok(R3000._uint32ArrayToBytes(values));
   }
@@ -122,7 +121,6 @@ export class R3000 extends GDBCommandHandler {
   handleReadRegister(index) {
     trace(`readRegister${index}`);
     const r = this.registers;
-    const empty = new Array(32).fill(0);
     const values = [...r.gprs, r.sr, r.hi, r.lo, r.bad, r.cause, r.pc];
     return ok(R3000._uint32ToBytes(values[index]));
   }
@@ -203,7 +201,12 @@ export class R3000 extends GDBCommandHandler {
   handleHostInfo() {
     trace('hostInfo');
     // triple:mipsel-unknown-linux-gnu
-    return ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4');
+    return ok('triple:6d697073656c2d756e6b6e6f776e2d6c696e75782d676e75;endian:little;ptrsize:4;');
+  }
+
+  handleMemoryRegionInfo(address) {
+    trace('memoryRegionInfo');
+    return ok('start:bfc00000;size:100000;permissions:rwx;');
   }
   
   handleSelectExecutionThread(threadId) {

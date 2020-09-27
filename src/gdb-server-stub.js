@@ -180,9 +180,14 @@ export class GDBServerStub {
       }
     } else if (m = packet.match(/^qHostInfo/)) {
       reply = this.handler.handleHostInfo();
+    } else if (m = packet.match(/^qProcessInfo/)) {
+      reply = ok('pid:1;endian:little;')
     } else if (m = packet.match(/^qRegisterInfo([0-9a-zA-Z]+)/)) {
       const registerIndex = parseInt(m[1], 16);
       reply = this.handler.handleRegisterInfo(registerIndex);
+    } else if (m = packet.match(/^qMemoryRegionInfo:([0-9a-zA-Z]+)/)) {
+      const address = parseInt(m[1], 16);
+      reply = this.handler.handleMemoryRegionInfo(address);
     } else if (m = packet.match(/^p([0-9a-zA-Z]+)/)) {
       const registerIndex = parseInt(m[1], 16);
       reply = this.handler.handleReadRegister(registerIndex);

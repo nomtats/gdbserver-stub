@@ -231,6 +231,16 @@ test('qsThreadInfo command', () => {
   expect(socket.write).toHaveBeenCalledWith('$l#6c');
 });
 
+test('qMemoryRegionInfo command', () => {
+  const handler = new GDBCommandHandler;
+  const stub = new GDBServerStub(handler);
+  const socket = new Socket();
+  handler.handleMemoryRegionInfo.mockReturnValue("start:12340000;size:100;");
+  stub.handlePacket(socket, 'qMemoryRegionInfo:1234dead');
+  expect(handler.handleMemoryRegionInfo).toHaveBeenCalledWith(0x1234dead);
+  expect(socket.write).toHaveBeenCalledWith('$start:12340000;size:100;#ee');
+});
+
 test('qC command', () => {
   const handler = new GDBCommandHandler;
   const stub = new GDBServerStub(handler);

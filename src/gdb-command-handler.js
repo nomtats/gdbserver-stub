@@ -100,6 +100,12 @@ export class GDBCommandHandler extends EventEmitter {
   handleHostInfo() { return unsupported(); }
 
   /**
+   * Gets information about the address range that contains address.
+   * e.g. 'start:2;size:fffffffe;permissions:rwx;';
+   */
+  handleMemoryRegionInfo(address) { return unsupported() }
+
+  /**
    * Selects the thread for step and continue execution.
    * @param {number} threadId The selected Thread ID
    */
